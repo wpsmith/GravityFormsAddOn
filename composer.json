@@ -21,7 +21,7 @@
   "require": {
     "php": ">=5.2.4",
     "wpsmith/plugin": "dev-master",
-    "wpsmith/singleton": "^0.0.1"
+    "wpsmith/singleton": "*"
   },
   "autoload": {
     "psr-4": {
