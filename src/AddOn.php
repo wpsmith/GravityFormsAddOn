@@ -731,7 +731,7 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 			}
 
 			// Pre-Process Feeds.
-			$this->get_core()->pre_process_feeds( array( $feed ), $this->get_entry(), $this->form );
+			$this->pre_process_feeds( array( $feed ), $this->get_entry(), $this->form );
 
 			return false;
 		}
@@ -851,7 +851,7 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 		 */
 		public function get_feed_by_form( $form, $entry ) {
 			if ( $form ) {
-				$feeds = $this->get_core()->get_feeds( $form['id'] );
+				$feeds = $this->get_feeds( $form['id'] );
 
 				foreach ( $feeds as $_feed ) {
 					if ( $_feed['is_active'] && $this->is_feed_condition_met( $_feed, $form, $entry ) ) {
@@ -870,7 +870,7 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 		 * @param string $message Message string.
 		 */
 		public function log( $method, $message ) {
-			$this->get_core()->log( $method, $message );
+			$this->log_debug( sprintf( '%s(): %s', $method, $message ) );
 		}
 
 		/** MISC */
