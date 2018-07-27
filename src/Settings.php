@@ -130,8 +130,6 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 
 			return $settings;
 
-			return $this->settings;
-
 		}
 
 		/** SETTINGS */
@@ -139,29 +137,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 		/**
 		 * Feed settings for feed listing page.
 		 *
-		 * @return array
-		 */
-//		public function get_feed_settings() {
-//
-//			return array(
-//				'title'       => esc_html__( 'Feed Settings', 'gfaddon' ),
-//				'description' => '',
-//				'fields'      => array(
-//					array(
-//						'name'     => 'feed_name',
-//						'label'    => esc_html__( 'Name', 'gfaddon' ),
-//						'type'     => 'text',
-//						'required' => true,
-//						'class'    => 'medium',
-//						'tooltip'  => sprintf( '<h6>%s</h6> %s', esc_html__( 'Name', 'gfaddon' ), esc_html__( 'Enter a feed name to uniquely identify this setup.', 'gfaddon' ) )
-//					)
-//				)
-//			);
-//
-//		}
-
-		/**
-		 * Feed settings for feed listing page.
+		 * @param array $feed_actions Array of feed available actions.
 		 *
 		 * @return array
 		 */
@@ -375,7 +351,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 				}
 
 				$field = \GFFormsModel::get_field( $form, $choices[ $i ]['value'] );
-				if ( ! CPTFeed::get_instance()->is_applicable_field_for_field_select( true, $field ) ) {
+				if ( ! self::get_instance()->core->is_applicable_field_for_field_select( true, $field ) ) {
 					unset( $choices[ $i ] );
 				}
 
@@ -428,103 +404,6 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 			return $choices;
 
 		}
-
-		/**
-		 * Returns (Create/Update) the available actions one can create in the feed.
-		 *
-		 * @return array
-		 */
-//		public function get_available_feed_actions() {
-//
-//			$form = \GFAPI::get_form( rgget( 'id' ) );
-//
-//			$create = array(
-//				'label'   => esc_html__( 'Create Entry/Post', 'gfaddon' ),
-//				'value'   => 'create',
-//				'icon'    => 'fa-edit',
-//				'tooltip' => sprintf(
-//					'<h6>%s</h6> %s <em><strong>%s</strong></em> %s',
-//					esc_html__( 'Create an Entry/Post', 'gfaddon' ),
-//					esc_html__( 'Use this action to create a post/entry. You cannot create a feed to update', 'gfaddon' ),
-//					esc_html__( 'and', 'gfaddon' ),
-//					esc_html__( 'create a post.', 'gfaddon' )
-//				),
-//			);
-//
-//			// If create feed(s) exist(s), only allow additional create feeds.
-//			if ( $this->core->form_has_feed_type( 'create', $form ) ) {
-//				return array(
-//					'create' => $create,
-//				);
-//			}
-//
-//			$update = array(
-//				'label'   => esc_html__( 'Update Entry/Post', 'gfaddon' ),
-//				'value'   => 'update',
-//				'icon'    => 'fa-refresh',
-//				'tooltip' => sprintf(
-//					'<h6>%s</h6> %s <em><strong>%s</strong></em> %s',
-//					esc_html__( 'Update Entry/Post', 'gfaddon' ),
-//					esc_html__( 'Use this action to update an existing post/entry. You cannot create a feed to update', 'gfaddon' ),
-//					esc_html__( 'and', 'gfaddon' ),
-//					esc_html__( 'create a post.', 'gfaddon' )
-//				),
-//			);
-//
-//			// If update(s) feeds exist(s), only allow additional update feeds.
-//			if ( $this->core->form_has_feed_type( 'update', $form ) ) {
-//				return array(
-//					'update' => $update,
-//				);
-//			}
-//
-//			$delete = array(
-//				'label'   => esc_html__( 'Delete Entry/Post', 'gfaddon' ),
-//				'value'   => 'delete',
-//				'icon'    => 'fa-trash',
-//				'tooltip' => sprintf(
-//					'<h6>%s</h6> %s <em><strong>%s</strong></em> %s',
-//					esc_html__( 'Delete Entry/Post', 'gfaddon' ),
-//					esc_html__( 'Use this action to delete an existing post/entry. You cannot create a feed to delete', 'gfaddon' ),
-//					esc_html__( 'and', 'gfaddon' ),
-//					esc_html__( 'update or create a post.', 'gfaddon' )
-//				),
-//			);
-//
-//			// If delete(s) feeds exist(s), only allow additional delete feeds.
-//			if ( $this->core->form_has_feed_type( 'delete', $form ) ) {
-//				return array(
-//					'delete' => $delete,
-//				);
-//			}
-//
-//			$dynamic = array(
-//				'label'   => esc_html__( 'Make Form Dynamic', 'gfaddon' ),
-//				'value'   => 'dynamic',
-//				'icon'    => 'fa-star',
-//				'tooltip' => sprintf(
-//					'<h6>%s</h6> %s',
-//					esc_html__( 'Make Form Dynamic', 'gfaddon' ),
-//					esc_html__( 'Use this action to create a dynamic form based on post types.', 'gfaddon' )
-//				),
-//			);
-//
-//			// If create feed(s) exist(s), only allow additional create feeds.
-//			if ( $this->core->form_has_feed_type( 'dynamic', $form ) ) {
-//				return array(
-//					'dynamic' => $dynamic,
-//				);
-//			}
-//
-//			// By default, allow all actions.
-//			return array(
-//				'create'  => $create,
-//				'update'  => $update,
-//				'delete'  => $delete,
-//				'dynamic' => $dynamic,
-//			);
-//
-//		}
 
 		/**
 		 * Magic getter for our object.
