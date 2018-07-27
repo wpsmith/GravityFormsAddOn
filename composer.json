@@ -25,7 +25,7 @@
   },
   "autoload": {
     "psr-4": {
-      "WPS\\Plugins\\GravityForms\\": "src/"
+      "WPS\\Plugins\\GravityForms\\AddOn\\": "src/"
     }
   }
 }

@@ -17,7 +17,7 @@
  * @since      0.1.0
  */
 
-namespace \WPS\Plugins\GravityForms\AddOn;
+namespace WPS\Plugins\GravityForms\AddOn;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
