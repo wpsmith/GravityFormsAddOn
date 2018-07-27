@@ -126,6 +126,19 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 		 *
 		 * @see GFAddon
 		 */
+		public function init() {
+			if ( method_exists( $this, 'register_actions' ) ) {
+				$this->register_actions();
+			}
+
+			// Add functionality from the parent GFAddon class
+			parent::init();
+		}
+		/**
+		 * Initializes GFAddon and adds the actions that we need
+		 *
+		 * @see GFAddon
+		 */
 		public function should_run() {
 			return (
 				is_admin() &&
@@ -147,18 +160,15 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 		 *
 		 * @return mixed
 		 */
-		public function process_feed_with_actions( $feed, $entry, $form ) {
+		public function process_feed_with_actions( $type, $feed, $entry, $form ) {
 
 			// Log that the feed is being processed
 			$this->log( __METHOD__, "form #{$form['id']} - starting process_feed()." );
 
-			$type = self::get_feed_type( $feed );
-
 			// Initialize & Process if action exists and form has feed type/action.
-			if ( isset( $this->actions[ $type ] ) && $this->form_has_feed_type( $type, $form ) ) {
+			if ( $this->actions->exists( $type ) && $this->form_has_feed_type( $type, $form ) ) {
 
-				$this->actions[ $type ]->init( $feed, $entry, $form );
-				return $this->actions[ $type ]->process();
+				return $this->actions->run( $type, $feed, $entry, $form );
 
 			}
 
@@ -747,7 +757,6 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 			return $this->form;
 		}
 
-
 		/**
 		 * Sends the validation.
 		 *
@@ -872,7 +881,7 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 		 * @todo remove once min GF version reaches 2.0.7.
 		 */
 		public function load_text_domain() {
-			\GFCommon::load_gf_text_domain( $this->_slug, GF_DYNAMIC_FIELDS_BASENAME );
+			\GFCommon::load_gf_text_domain( $this->_slug, 'gfaddon' );
 		}
 	}
 

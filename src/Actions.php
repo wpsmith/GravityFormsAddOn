@@ -29,12 +29,13 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 	/**
 	 * Class FeedSettings.
 	 *
-	 * @package \WPS\Plugins\GravityForms\DynamicFields
+	 * @package \WPS\Plugins\GravityForms\AddOn
 	 */
 	class Actions extends \WPS\Core\Singleton {
 
 		protected $args = array();
 
+		protected $_actions = array();
 		protected $actions = array();
 
 		/**
@@ -51,6 +52,15 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 		 */
 		protected function __construct( AddOn $core ) {
 			$this->core = $core;
+		}
+
+		protected function get_default_action() {
+			return array(
+				'label' => '',
+				'value' => '',
+				'icon'  => '',
+				'class' => '',
+			);
 		}
 
 		protected function get_default_args() {
@@ -76,11 +86,12 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 			$name = sanitize_title_with_dashes( $name );
 
 			// Merge args.
-			$args = wp_parse_args( $args, $this->get_default_args() );
+			$args   = wp_parse_args( $args, $this->get_default_args() );
+			$action = wp_parse_args( $action, $this->get_default_action() );
 
 			// Add action.
-			$this->actions[ $name ] = $action;
-			$this->args[ $name ]    = $args;
+			$this->_actions[ $name ] = $action;
+			$this->args[ $name ]     = $args;
 
 		}
 
@@ -97,8 +108,8 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 			$name = sanitize_title_with_dashes( $name );
 
 			// Add settings.
-			if ( isset( $this->actions[ $name ] ) ) {
-				unset( $this->actions[ $name ] );
+			if ( isset( $this->_actions[ $name ] ) ) {
+				unset( $this->_actions[ $name ] );
 				unset( $this->args[ $name ] );
 
 				return true;
@@ -119,18 +130,69 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 
 			$form = \GFAPI::get_form( rgget( 'id' ) );
 
-			foreach ( $this->actions as $name => $action ) {
+			$actions = $this->_actions;
+			foreach ( $actions as $name => $action ) {
+				unset( $actions[$name]['class'] );
+
 				if (
-					isset( $this->conditions[ $name ] ) &&
+					isset( $this->args[ $name ] ) &&
 					$this->args[ $name ]['no_other_allowed'] &&
 					$this->core->form_has_feed_type( $name, $form )
 				) {
+					unset( $action['class'] );
 					return array( $name => $action );
 				}
 			}
 
-			return $this->actions;
+			return $actions;
 
+		}
+
+		public function get( $name ) {
+			if ( $this->exists( $name ) ) {
+				return $this->actions[ $name ];
+			}
+
+			return new \WP_Error( 'action-does-not-exist', __( 'Action does not exist', 'gfaddon' ) );
+		}
+
+		public function run( $name, $feed, $entry, $form ) {
+			$this->init_action( $name, $feed, $entry, $form );
+
+			return $this->process_action( $name );
+		}
+
+		public function init_action( $name, $feed, $entry, $form ) {
+			$this->actions[ $name ]->init( $feed, $entry, $form );
+		}
+
+		public function process_action( $name ) {
+			return $this->actions[ $name ]->process();
+		}
+
+		public function exists( $name ) {
+			if ( isset( $this->actions[ $name ] ) ) {
+				return true;
+			}
+
+			if ( ! isset( $this->actions[ $name ] ) && isset( $this->_actions[ $name ] ) ) {
+				$this->_init_action( $name, $this->_actions[ $name ] );
+
+				return true;
+			}
+
+			return false;
+		}
+
+		protected function _init_action( $name, $action ) {
+			$class = $action['class'];
+			$this->actions[ $name ] = new $class( $this->core );
+		}
+
+		public function init() {
+			foreach ( $this->_actions as $name => $action ) {
+				$this->_init_action( $name, $action );
+			}
 		}
 	}
 }

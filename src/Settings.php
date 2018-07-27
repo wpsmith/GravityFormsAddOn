@@ -33,7 +33,9 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 	 */
 	class Settings extends \WPS\Core\Singleton {
 
+		protected $order = array();
 		protected $settings = array();
+		protected $feed_actions = array();
 
 		/**
 		 * Core Addon Instance.
@@ -49,8 +51,11 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 		 */
 		protected function __construct( \GFFeedAddOn $core ) {
 			$this->core = $core;
+		}
 
-			$this->register( 'feed_settings', $this->get_feed_settings() );
+		public function register_feed_settings( $actions = array() ) {
+			$this->register( 'feed_settings', $this->get_feed_settings( $actions ) );
+
 		}
 
 		/**
@@ -66,6 +71,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 
 			// Add settings.
 			$this->settings[ $name ] = $settings;
+			$this->order[]           = $name;
 
 		}
 
@@ -84,6 +90,12 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 			// Add settings.
 			if ( isset( $this->settings[ $name ] ) ) {
 				unset( $this->settings[ $name ] );
+
+				foreach ( $this->order as $i => $setting ) {
+					if ( $name === $setting ) {
+						unset ( $this->settings[ $i ] );
+					}
+				}
 
 				return true;
 			}
@@ -105,11 +117,18 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 			$register_additional = is_string( $register_additional ) ? sanitize_title_with_dashes( $register_additional ) : false;
 
 			if ( $register_additional ) {
-				$this->register( $register_additional, $this->get_feed_settings() );
+				$this->register( $register_additional, $this->get_additional_settings() );
 			}
 			if ( $register_save ) {
-				$this->register( $register_save, $this->get_feed_settings() );
+				$this->register( $register_save, $this->get_save_settings() );
 			}
+
+			$settings = array();
+			foreach ( $this->order as $setting ) {
+				$settings[] = $this->settings[ $setting ];
+			}
+
+			return $settings;
 
 			return $this->settings;
 
@@ -122,21 +141,66 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 		 *
 		 * @return array
 		 */
-		public function get_feed_settings() {
+//		public function get_feed_settings() {
+//
+//			return array(
+//				'title'       => esc_html__( 'Feed Settings', 'gfaddon' ),
+//				'description' => '',
+//				'fields'      => array(
+//					array(
+//						'name'     => 'feed_name',
+//						'label'    => esc_html__( 'Name', 'gfaddon' ),
+//						'type'     => 'text',
+//						'required' => true,
+//						'class'    => 'medium',
+//						'tooltip'  => sprintf( '<h6>%s</h6> %s', esc_html__( 'Name', 'gfaddon' ), esc_html__( 'Enter a feed name to uniquely identify this setup.', 'gfaddon' ) )
+//					)
+//				)
+//			);
+//
+//		}
+
+		/**
+		 * Feed settings for feed listing page.
+		 *
+		 * @return array
+		 */
+		public function get_feed_settings( $feed_actions = array() ) {
+
+			$feed_actions = empty( $feed_actions ) ? $this->feed_actions : $feed_actions;
+			$feed_name    = array(
+				'name'     => 'feed_name',
+				'label'    => esc_html__( 'Name', 'gfcptaddon' ),
+				'type'     => 'text',
+				'required' => true,
+				'class'    => 'medium',
+				'tooltip'  => sprintf( '<h6>%s</h6> %s', esc_html__( 'Name', 'gfcptaddon' ), esc_html__( 'Enter a feed name to uniquely identify this setup.', 'gfcptaddon' ) )
+			);
+
+			$fields = array( $feed_name );
+
+			if ( ! empty( $feed_actions ) ) {
+				$fields[] = array(
+					'name'     => 'feed_type',
+					'label'    => esc_html__( 'Action', 'gfcptaddon' ),
+					'type'     => 'radio',
+					'required' => true,
+					'tooltip'  => sprintf(
+						'<h6>%s</h6> %s <p><em>%s</em></p>',
+						esc_html__( 'Action', 'gfcptaddon' ),
+						esc_html__( 'Select the type of feed you would like to create. "Create" feeds will create a new entry/post. "Update" feeds will update entries/posts.', 'gfcptaddon' ),
+						__( 'A form can have multiple "Create" feeds <strong>or</strong> a single "Update" feed. A form cannot have both a "Create" feed and an "Update" feed.', 'gfcptaddon' )
+					),
+					'choices'  => $feed_actions,
+					'onchange' => 'jQuery( this ).parents( "form" ).submit();'
+				);
+
+			}
 
 			return array(
-				'title'       => esc_html__( 'Feed Settings', 'gfaddon' ),
+				'title'       => esc_html__( 'Feed Settings', 'gfcptaddon' ),
 				'description' => '',
-				'fields'      => array(
-					array(
-						'name'     => 'feed_name',
-						'label'    => esc_html__( 'Name', 'gfaddon' ),
-						'type'     => 'text',
-						'required' => true,
-						'class'    => 'medium',
-						'tooltip'  => sprintf( '<h6>%s</h6> %s', esc_html__( 'Name', 'gfaddon' ), esc_html__( 'Enter a feed name to uniquely identify this setup.', 'gfaddon' ) )
-					)
-				)
+				'fields'      => $fields,
 			);
 
 		}
@@ -146,30 +210,28 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 		 *
 		 * @return array
 		 */
-		public function additional_settings() {
-			$is_update_feed = Feed::is_feed_type( $this->current_feed, 'update' );
+		public function get_additional_settings() {
 
 			return array(
 				'title'       => esc_html__( 'Additional Options', 'gfaddon' ),
 				'description' => '',
 				'dependency'  => array(
 					'field'  => 'feed_type',
-//					'values' => array( 'create', 'update' ),
 					'values' => '_notempty_',
 				),
 				'fields'      => array(
 					array(
-						'name'           => 'post_condition',
-						'label'          => $is_update_feed ? esc_html__( 'Update Condition', 'gfaddon' ) : esc_html__( 'Entry/Post Condition', 'gfaddon' ),
+						'name'           => 'feed_condition',
+						'label'          => esc_html__( 'Condition', 'gfaddon' ),
 						'type'           => 'feed_condition',
 						'checkbox_label' => esc_html__( 'Enable', 'gfaddon' ),
-						'instructions'   => $is_update_feed ? esc_html__( 'Update post entry if', 'gfaddon' ) : esc_html__( 'Create post entry if', 'gfaddon' ),
-						'tooltip'        => $is_update_feed ?
-							sprintf( '<h6>%s</h6> %s', esc_html__( 'Update Condition', 'gfaddon' ), esc_html__( 'When the update condition is enabled, form submissions will only update the post entry when the condition is met. The data will always be populated into the form.', 'gfaddon' ) ) :
-							sprintf( '<h6>%s</h6> %s', esc_html__( 'Registration Condition', 'gfaddon' ), esc_html__( 'When the registration condition is enabled, form submissions will only create the post entry when the condition is met.', 'gfaddon' ) )
+						'instructions'   => esc_html__( 'The condition that must be met for this feed to be executed.', 'gfaddon' ),
+						'tooltip'        =>
+							sprintf( '<h6>%s</h6> %s', esc_html__( 'Condition', 'gfaddon' ), esc_html__( 'When the condition is enabled, form submissions will only run when the condition is met. The data will always be populated into the form.', 'gfaddon' ) ),
 					)
 				)
 			);
+
 		}
 
 		/**
@@ -177,7 +239,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 		 *
 		 * @return array
 		 */
-		public function save_settings() {
+		public function get_save_settings() {
 
 			return array(
 				'fields' => array(
