@@ -20,8 +20,7 @@
   },
   "require": {
     "php": ">=5.2.4",
-    "wpsmith/plugin": "dev-master",
-    "wpsmith/singleton": "*"
+    "wpsmith/singleton": "dev-master"
   },
   "autoload": {
     "psr-4": {
