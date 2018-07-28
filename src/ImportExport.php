@@ -43,9 +43,9 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\ImportExport' ) ) {
 		 *
 		 * @param string $slug Feed slug.
 		 */
-		public function __construct( $slug, AddOn $feed ) {
-			$this->slug = $slug;
+		public function __construct( AddOn $feed ) {
 			$this->feed = $feed;
+			$this->slug = $feed->get_slug();
 
 			add_filter( 'gform_export_form', array( $this, 'modify_export_form' ) );
 			add_filter( 'gform_form_update_meta', array( $this, 'modify_imported_form' ), 10, 3 );

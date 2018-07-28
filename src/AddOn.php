@@ -783,6 +783,20 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 
 		/** HELPERS */
 
+		/**
+		 * Gets the feed slug.
+		 *
+		 * @return string
+		 */
+		public function get_slug() {
+			return $this->_slug;
+		}
+
+		/**
+		 * Gets the current feed type.
+		 *
+		 * @return mixed
+		 */
 		public function get_current_feed_type() {
 
 			$feed_id = $this->get_current_feed_id();
