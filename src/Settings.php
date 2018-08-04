@@ -31,7 +31,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 	 *
 	 * @package \WPS\Plugins\GravityForms\DynamicFields
 	 */
-	class Settings extends \WPS\Core\Singleton {
+	class Settings {
 
 		protected $order = array();
 		protected $settings = array();
@@ -49,7 +49,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Settings' ) ) {
 		 *
 		 * @param \GFFeedAddOn $core Core Feed Object.
 		 */
-		protected function __construct( \GFFeedAddOn $core ) {
+		public function __construct( \GFFeedAddOn $core ) {
 			$this->core = $core;
 		}
 

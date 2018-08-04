@@ -31,7 +31,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 	 *
 	 * @package \WPS\Plugins\GravityForms\AddOn
 	 */
-	class Actions extends \WPS\Core\Singleton {
+	class Actions {
 
 		protected $args = array();
 
@@ -50,7 +50,7 @@ if ( ! class_exists( '\WPS\Plugins\GravityForms\AddOn\Actions' ) ) {
 		 *
 		 * @param AddOn $core Core Feed Object.
 		 */
-		protected function __construct( AddOn $core ) {
+		public function __construct( AddOn $core ) {
 			$this->core = $core;
 		}
 
