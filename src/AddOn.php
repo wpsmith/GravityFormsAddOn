@@ -121,19 +121,55 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 //		 */
 //		protected $merge_tags;
 
+		protected $caps_added_to_admin = false;
+
 		/**
 		 * Initializes GFAddon and adds the actions that we need
 		 *
 		 * @see GFAddon
 		 */
 		public function init() {
-			if ( method_exists( $this, 'register_actions' ) ) {
+			if ( empty( $this->actions ) && method_exists( $this, 'register_actions' ) ) {
 				$this->register_actions();
+			}
+			if ( empty( $this->settings ) && method_exists( $this, 'init_settings' ) ) {
+				$this->init_settings();
+			}
+
+			if ( ! $this->caps_added_to_admin ) {
+				$this->add_caps_to_admin();
 			}
 
 			// Add functionality from the parent GFAddon class
 			parent::init();
 		}
+
+		protected function add_caps( &$capabilities, $caps ) {
+			if ( is_array( $caps ) ) {
+				$capabilities = array_merge( $capabilities, $caps );
+			} elseif( is_string( $caps ) ) {
+				$capabilities[] = $caps;
+			}
+			$capabilities = array_unique( $capabilities );
+		}
+
+		protected function add_caps_to_admin() {
+
+			$capabilities = array();
+			$this->add_caps($capabilities, $this->_capabilities );
+			$this->add_caps($capabilities, $this->_capabilities_settings_page );
+			$this->add_caps($capabilities, $this->_capabilities_form_settings );
+			$this->add_caps($capabilities, $this->_capabilities_uninstall );
+
+			$admin = get_role( 'administrator' );
+			foreach( $capabilities as $cap ) {
+				$admin->add_cap( $cap );
+			}
+
+			$this->caps_added_to_admin = true;
+
+		}
+
 		/**
 		 * Initializes GFAddon and adds the actions that we need
 		 *
@@ -285,7 +321,7 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 				'feed_name' => esc_html__( 'Name', 'gfaddon' ),
 			);
 
-			if ( !empty( $this->actions ) ) {
+			if ( ! empty( $this->actions ) ) {
 				$columns['feed_type'] = esc_html__( 'Action', 'gfaddon' );
 			}
 
@@ -315,9 +351,9 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 		}
 
 		protected function can_have_multiple() {
-			$form  = \GFAPI::get_form( rgget( 'id' ) );
+			$form = \GFAPI::get_form( rgget( 'id' ) );
 
-			foreach( $this->actions as $feed_type => $action ) {
+			foreach ( $this->actions as $feed_type => $action ) {
 				if ( $this->form_has_feed_type( $feed_type, $form ) && ! $action['can_have_multiple'] ) {
 					return false;
 				}
@@ -360,7 +396,7 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 			/* Get the feed. */
 			$feed = is_array( $feed ) ? $feed : $this->get_feed( $feed );
 
-			foreach( $this->actions as $feed_type => $action ) {
+			foreach ( $this->actions as $feed_type => $action ) {
 				if (
 					! $action['can_duplicate'] &&
 					self::is_feed_type( $feed, $feed_type ) ) {
