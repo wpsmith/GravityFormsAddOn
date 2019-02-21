@@ -8,23 +8,23 @@
  * Any modifications to or software including (via compiler) GPL-licensed code must also be made
  * available under the GPL along with build & install instructions.
  *
- * @package    WPS\Core
+ * @package    WPS\WP\Plugins\GravityForms
  * @author     Travis Smith <t@wpsmith.net>
- * @copyright  2015-2018 Travis Smith
+ * @copyright  2015-2019 Travis Smith
  * @license    http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
  * @link       https://github.com/wpsmith/WPS
  * @version    1.0.0
  * @since      0.1.0
  */
 
-namespace WPS\Plugins\GravityForms\AddOn;
+namespace WPS\WP\Plugins\GravityForms\AddOn;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
+if ( ! class_exists( __NAMESPACE__ . '\AddOn' ) ) {
 
 	// Includes the feeds portion of the add-on framework.
 	\GFForms::include_feed_addon_framework();
@@ -226,6 +226,12 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 				$this->init_settings();
 			}
 
+//			// Manager
+//			$settings_mgr = new \WPS\Plugins\GravityForms\AddOn\Settings( $this );
+//
+//			// Settings.
+//			$settings = Settings::get_instance( $this );
+
 			// Settings.
 			$settings = Settings::get_instance( $this );
 
@@ -266,11 +272,72 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 			$select_field             = $field;
 			$select_field_value       = $this->get_setting( $select_field['name'], rgar( $select_field, 'default_value' ) );
 			$select_field['onchange'] = '';
-			$select_field['class']    = ( isset( $select_field['class'] ) ) ? $select_field['class'] . 'gaddon-setting-select-custom' : 'gaddon-setting-select-custom';
+			$select_field['class']    = ( isset( $select_field['class'] ) ) ? $select_field['class'] . ' gaddon-setting-select-custom' : 'gaddon-setting-select-custom';
 
 			// Prepare input field.
 			$input_field          = $field;
-			$input_field['name']  .= '_custom';
+			$input_field['name']  .= '_{i}';
+//			$input_field['value']  .= '{custom_value}';
+			$input_field['style'] = 'width:200px;max-width:90%;';
+			$input_field['class'] = rgar( $field, 'input_class' ) . ' custom_value custom_value_{i}';
+			$input_field_display  = '';
+
+			// Loop through select choices and make sure option for custom exists.
+			$has_gf_custom = self::has_gf_custom( $select_field['choices'] );
+			if ( ! $has_gf_custom ) {
+				$select_field['choices'][] = array(
+					'label' => esc_html__( 'Add Custom', 'gfaddon' ) . ' ' . $select_field['label'],
+					'value' => 'gf_custom'
+				);
+			}
+
+			// If select value is "gf_custom", hide the select field and display the input field.
+			if ( $select_field_value == 'gf_custom' || ( count( $select_field['choices'] ) == 1 && $select_field['choices'][0]['value'] == 'gf_custom' ) ) {
+				$select_field['style'] = 'display:none;';
+			} else {
+				$input_field_display = ' style="display:none;"';
+			}
+
+			// Add select field.
+			$html = $this->settings_select( $select_field, false );
+
+			// Add input field.
+			$html .= '<div class="gaddon-setting-select-custom-value-container"' . $input_field_display . '>';
+			$html .= count( $select_field['choices'] ) > 1 ? sprintf( '<a href="#" class="select-custom-reset">%s</a>', __( 'Reset', 'gfaddon' ) ) : '';
+			$html .= $this->settings_text( $input_field, false );
+			$html .= '</div>';
+
+			if ( $echo ) {
+				echo $html;
+			}
+
+			return $html;
+
+		}
+
+		/**
+		 * Overrides renders and initializes a drop down field with a input field for custom input based on the $field array.
+		 * (Forked to add support for merge tags in input field.)
+		 *
+		 * @since  2.4
+		 * @access public
+		 *
+		 * @param array $field Field array containing the configuration options of this field
+		 * @param bool  $echo  True to echo the output to the screen, false to simply return the contents as a string
+		 *
+		 * @return string The HTML for the field
+		 */
+		public function settings_single_select_custom( $field, $echo = true ) {
+
+			// Prepare select field.
+			$select_field             = $field;
+			$select_field_value       = $this->get_setting( $select_field['name'], rgar( $select_field, 'default_value' ) );
+			$select_field['onchange'] = '';
+			$select_field['class']    = ( isset( $select_field['class'] ) ) ? $select_field['class'] . ' gaddon-setting-select-custom' : 'gaddon-setting-select-custom';
+
+			// Prepare input field.
+			$input_field          = $field;
+			$input_field['name'] .= '_custom';
 			$input_field['style'] = 'width:200px;max-width:90%;';
 			$input_field['class'] = rgar( $field, 'input_class' );
 			$input_field_display  = '';
@@ -295,8 +362,8 @@ if ( ! class_exists( 'WPS\Plugins\GravityForms\AddOn\AddOn' ) ) {
 			$html = $this->settings_select( $select_field, false );
 
 			// Add input field.
-			$html .= '<div class="gaddon-setting-select-custom-container"' . $input_field_display . '>';
-			$html .= count( $select_field['choices'] ) > 1 ? sprintf( '<a href="#" class="select-custom-reset">%s</a>', __( 'Reset', 'gfaddon' ) ) : '';
+			$html .= '<div class="gaddon-setting-select-custom-value-container"' . $input_field_display . '>';
+			$html .= count( $select_field['choices'] ) > 1 ? sprintf( '<a href="#" class="select-custom-reset dashicons dashicons-image-rotate" alt="%s"></a>&nbsp;', __( 'Reset', 'gfaddon' ) ) : '';
 			$html .= $this->settings_text( $input_field, false );
 			$html .= '</div>';
 
